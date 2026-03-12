@@ -68,7 +68,8 @@ public class PlayerController : MonoBehaviour
 
             if (controlmode == Controls.pc)
             {
-                moveX = Input.GetAxis("Horizontal");
+                float raw = Input.GetAxis("Horizontal");
+                moveX = Mathf.Max(0f, raw); // no reverse: only allow right/forward
             }
 
 
@@ -107,12 +108,11 @@ public class PlayerController : MonoBehaviour
         // Player movement
         if (controlmode == Controls.pc)
         {
-            moveX = Input.GetAxis("Horizontal");
+            moveX = Mathf.Max(0f, Input.GetAxis("Horizontal")); // no reverse
         }
-       
 
-
-        rb.linearVelocity = new Vector2(moveX * moveSpeed, rb.linearVelocity.y);
+        float clampedMoveX = Mathf.Max(0f, moveX); // reject left/back on PC and mobile
+        rb.linearVelocity = new Vector2(clampedMoveX * moveSpeed, rb.linearVelocity.y);
     }
 
     private void Jump(float jumpForce)
@@ -162,7 +162,7 @@ public class PlayerController : MonoBehaviour
     //mobile;
     public void MobileMove(float value)
     {
-        moveX = value;
+        moveX = Mathf.Max(0f, value); // no reverse: only right/forward
     }
     public void MobileJump()
     {

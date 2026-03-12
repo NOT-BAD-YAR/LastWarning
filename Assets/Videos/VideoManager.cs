@@ -28,9 +28,21 @@ public class VideoManager : MonoBehaviour
     {
         videoPlayer.gameObject.SetActive(true);
         videoPlayer.clip = Resources.Load<VideoClip>("end") as VideoClip;
-        videoPlayer.Prepare();
+        if (videoPlayer.clip == null)
+        {
+            Debug.LogError("VideoManager: 'end' video not found in Resources folder. Add it to a Resources folder.");
+            return;
+        }
         gameUI.SetActive(false);
         videoCanvas.gameObject.SetActive(true);
+        videoPlayer.Prepare();
+        videoPlayer.prepareCompleted += OnEndVideoPrepared;
+    }
+
+    void OnEndVideoPrepared(VideoPlayer source)
+    {
+        videoPlayer.prepareCompleted -= OnEndVideoPrepared;
+        videoPlayer.Play();
     }
 
     void OnVideoEnd(VideoPlayer vp)
