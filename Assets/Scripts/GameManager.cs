@@ -57,12 +57,24 @@ public class GameManager : MonoBehaviour
     private void UpdateGUI()
     {
         coinText.text = coinCount.ToString();
+    }
 
-        // AUTO COMPLETE - 13 coins
-        if (coinCount >= totalCoins && totalCoins > 0 && !levelCompleted)
+    // Called when player reaches the level exit
+    public void HandleExitReached()
+    {
+        // If player collected all coins, complete level and play end video
+        if (coinCount >= totalCoins && totalCoins > 0)
         {
-            levelCompleted = true;
-            LevelComplete();
+            if (!levelCompleted)
+            {
+                levelCompleted = true;
+                LevelComplete();
+            }
+        }
+        else
+        {
+            // Not all coins collected: reload level scene (build index 1)
+            SceneManager.LoadScene(1);
         }
     }
 

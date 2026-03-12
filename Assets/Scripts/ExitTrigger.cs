@@ -22,7 +22,7 @@ public class ExitTrigger : MonoBehaviour
         UIManager.instance.fadeToBlack = true;
 
         yield return new WaitForSeconds(2f);
-        // Do something after flag anim
-        GameManager.instance.LevelComplete();
+        // At exit: decide based on coins collected
+        GameManager.instance.HandleExitReached();
     }
 }
