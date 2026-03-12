@@ -20,8 +20,6 @@ public class PlayerController : MonoBehaviour
     private bool isGroundedBool = false;
     private bool canDoubleJump = false;
 
-    public Animator playeranim;
-
     public Controls controlmode;
    
 
@@ -88,58 +86,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (!isPaused)
-        {
-            // Calculate rotation angle based on mouse position
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 lookDirection = mousePosition - transform.position;
-            float angle = Mathf.Atan2(lookDirection.y, lookDirection.x) * Mathf.Rad2Deg;
-
-            // ... (your existing code for rotation)
-
-            // Handle shooting
-            if (controlmode == Controls.pc && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
-            {
-                Shoot();
-                nextFireTime = Time.time + 1f / fireRate; // Set the next allowed fire time
-            }
-        }
-        SetAnimations();
-
-        if (moveX != 0)
-        {
-            FlipSprite(moveX);
-        }
-
-        //impactEffect
-
-        if(!wasonGround && isGroundedBool)
-        {
-            ImpactEffect.gameObject.SetActive(true);
-            ImpactEffect.Stop();
-            ImpactEffect.transform.position = new Vector2(footsteps.transform.position.x,footsteps.transform.position.y-0.2f);
-            ImpactEffect.Play();
-        }
-
-        wasonGround = isGroundedBool;
-
-        
-    }
-    public void SetAnimations()
-    {
-        if (moveX != 0 && isGroundedBool)
-        {
-            playeranim.SetBool("run", true);
-            footEmissions.rateOverTime= 35f;
-        }
-        else
-        {
-            playeranim.SetBool("run",false);
-            footEmissions.rateOverTime = 0f;
-        }
-
-        playeranim.SetBool("isGrounded", isGroundedBool);
-       
+        // No rotation, shooting, or animation calls for static player
     }
 
     private void FlipSprite(float direction)
@@ -172,7 +119,6 @@ public class PlayerController : MonoBehaviour
     {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0); // Zero out vertical velocity
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-        playeranim.SetTrigger("jump");
     }
 
     private bool IsGrounded()
