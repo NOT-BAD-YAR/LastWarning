@@ -2,35 +2,28 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
 
-
     [SerializeField] private TMP_Text coinText;
-
     [SerializeField] private PlayerController playerController;
+    [SerializeField] VideoManager videoManager;  // DRAG VIDEO MANAGERS HERE
 
     private int coinCount = 0;
     private int gemCount = 0;
     private bool isGameOver = false;
+    private bool levelCompleted = false;  // Prevent double call
     private Vector3 playerPosition;
 
     //Level Complete
-
     [SerializeField] GameObject levelCompletePanel;
     [SerializeField] TMP_Text leveCompletePanelTitle;
     [SerializeField] TMP_Text levelCompleteCoins;
 
-
-
-
-   
     private int totalCoins = 0;
-  
-
-
 
     private void Awake()
     {
@@ -41,9 +34,11 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         UpdateGUI();
-        UIManager.instance.fadeFromBlack = true;
+        if (UIManager.instance != null)
+        {
+            UIManager.instance.fadeFromBlack = true;
+        }
         playerPosition = playerController.transform.position;
-
         FindTotalPickups();
     }
 
@@ -52,6 +47,7 @@ public class GameManager : MonoBehaviour
         coinCount++;
         UpdateGUI();
     }
+
     public void IncrementGemCount()
     {
         gemCount++;
@@ -61,36 +57,35 @@ public class GameManager : MonoBehaviour
     private void UpdateGUI()
     {
         coinText.text = coinCount.ToString();
-  
+
+        // AUTO COMPLETE - 13 coins
+        if (coinCount >= totalCoins && totalCoins > 0 && !levelCompleted)
+        {
+            levelCompleted = true;
+            LevelComplete();
+        }
     }
 
     public void Death()
     {
         if (!isGameOver)
         {
-            // Disable Mobile Controls
-            UIManager.instance.DisableMobileControls();
-            // Initiate screen fade
-            UIManager.instance.fadeToBlack = true;
-
-            // Disable the player object
+            if (UIManager.instance != null)
+            {
+                UIManager.instance.DisableMobileControls();
+                UIManager.instance.fadeToBlack = true;
+            }
             playerController.gameObject.SetActive(false);
-
-            // Start death coroutine to wait and then respawn the player
             StartCoroutine(DeathCoroutine());
-
-            // Update game state
             isGameOver = true;
-
-            // Log death message
             Debug.Log("Died");
         }
     }
- 
+
     public void FindTotalPickups()
     {
-
-        pickup[] pickups = GameObject.FindObjectsOfType<pickup>();
+        pickup[] pickups = Object.FindObjectsByType<pickup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        totalCoins = 0;
 
         foreach (pickup pickupObject in pickups)
         {
@@ -98,41 +93,48 @@ public class GameManager : MonoBehaviour
             {
                 totalCoins += 1;
             }
-           
         }
-
-
-      
+        Debug.Log($"Total coins: {totalCoins}");
     }
+
     public void LevelComplete()
     {
-       
-
-
+        Debug.Log("LEVEL COMPLETE CALLED!");
         levelCompletePanel.SetActive(true);
         leveCompletePanelTitle.text = "LEVEL COMPLETE";
-
-
-
-        levelCompleteCoins.text = "COINS COLLECTED: "+ coinCount.ToString() +" / " + totalCoins.ToString();
- 
+        levelCompleteCoins.text = $"COINS: {coinCount} / {totalCoins}";
+        StartCoroutine(CompleteWithEndVideo());
     }
-   
+
+    private IEnumerator CompleteWithEndVideo()
+    {
+        yield return new WaitForSeconds(2f);
+        levelCompletePanel.SetActive(false);
+        Debug.Log("Starting end video...");
+
+        if (videoManager != null)
+        {
+            videoManager.PlayEndVideo();
+            Debug.Log("End video triggered!");
+        }
+        else
+        {
+            Debug.LogError("Drag VideoManager to GameManager VIDEO MANAGER field!");
+        }
+    }
+
     public IEnumerator DeathCoroutine()
     {
         yield return new WaitForSeconds(1f);
-        playerController.transform.position = playerPosition;
-
-        // Wait for 2 seconds
+        if (playerController != null && isGameOver)
+        {
+            playerController.gameObject.SetActive(true);
+            playerController.transform.position = playerPosition;
+        }
         yield return new WaitForSeconds(1f);
-
-        // Check if the game is still over (in case player respawns earlier)
         if (isGameOver)
         {
-            SceneManager.LoadScene(1);
-
-            
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }
-
 }
